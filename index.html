@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>労働時間・時間数 相互変換＆計算シート</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        /* Custom scrollbar for clean UI */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen pb-12">
+
+    <header class="bg-indigo-600 text-white shadow-md">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-2">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-indigo-500 rounded-lg">
+                    <i class="fa-solid fa-calculator text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold leading-tight">労働時間・時間数 相互変換＆計算アプリ</h1>
+                    <p class="text-xs text-indigo-200">PDF「労働時間計算用シート」の機能拡張版</p>
+                </div>
+            </div>
+            <div class="text-xs bg-indigo-700/60 px-3 py-1.5 rounded-full border border-indigo-400/30">
+                <i class="fa-solid fa-circle-info mr-1"></i> 例: 7時間45分 (7.45) ➔ 7.75時間
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col justify-between">
+            <div>
+                <div class="flex items-center gap-2 pb-3 mb-4 border-b border-slate-100">
+                    <span class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">1</span>
+                    <h2 class="text-lg font-bold text-slate-800">時間・数値 相互変換</h2>
+                </div>
+
+                <!-- Mode 1: Time (hh.mm) -> Decimal -->
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-5">
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="text-sm font-semibold text-slate-700 flex items-center gap-1.5">
+                            <i class="fa-regular fa-clock text-blue-500"></i> 時間表記 ➔ 数値(10進数)
+                        </label>
+                        <span class="text-xs text-slate-500">例: 7.45 (7時間45分)</span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
+                        <div>
+                            <span class="text-xs text-slate-500 mb-1 block">時間 (時.分 または 時:分)</span>
+                            <input type="text" id="timeToNumInput" placeholder="7.45 または 7:45" 
+                                class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-lg font-mono focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                                oninput="convertTimeToNum()">
+                        </div>
+                        <div class="bg-blue-50/70 p-2.5 rounded-lg border border-blue-100">
+                            <span class="text-xs text-blue-600 font-medium block">数値 (10進数)</span>
+                            <div id="timeToNumResult" class="text-2xl font-bold font-mono text-blue-700">0.00</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mode 2: Decimal -> Time (hh.mm) -->
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="text-sm font-semibold text-slate-700 flex items-center gap-1.5">
+                            <i class="fa-solid fa-arrow-right-arrow-left text-emerald-500"></i> 数値(10進数) ➔ 時間表記
+                        </label>
+                        <span class="text-xs text-slate-500">例: 162.45時間 ➔ 162.27</span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
+                        <div>
+                            <span class="text-xs text-slate-500 mb-1 block">数値 (10進数)</span>
+                            <input type="number" step="0.01" id="numToTimeInput" placeholder="162.45" 
+                                class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-lg font-mono focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition"
+                                oninput="convertNumToTime()">
+                        </div>
+                        <div class="bg-emerald-50/70 p-2.5 rounded-lg border border-emerald-100">
+                            <span class="text-xs text-emerald-600 font-medium block">時間 (時.分 / 時:分)</span>
+                            <div id="numToTimeResult" class="text-2xl font-bold font-mono text-emerald-700">0.00 <span class="text-xs font-normal text-slate-500">(0:00)</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Table Guide -->
+            <div class="mt-6 border-t border-slate-100 pt-4">
+                <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">よく使われる分と10進数換算表</h3>
+                <div class="grid grid-cols-4 gap-1.5 text-center text-xs">
+                    <div class="bg-slate-100 p-1.5 rounded"><span class="font-bold">15分</span> = 0.25</div>
+                    <div class="bg-slate-100 p-1.5 rounded"><span class="font-bold">30分</span> = 0.50</div>
+                    <div class="bg-slate-100 p-1.5 rounded"><span class="font-bold">45分</span> = 0.75</div>
+                    <div class="bg-slate-100 p-1.5 rounded"><span class="font-bold">05分</span> = 0.08</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col justify-between">
+            <div>
+                <div class="flex items-center gap-2 pb-3 mb-4 border-b border-slate-100">
+                    <span class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-sm">2</span>
+                    <h2 class="text-lg font-bold text-slate-800">労働時間・出勤簿計算</h2>
+                </div>
+
+                <div class="space-y-4">
+                    <!-- Standard Hours & Days -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-xs font-semibold text-slate-600 mb-1 block">1日の所定労働時間 (数値)</label>
+                            <div class="relative">
+                                <input type="number" id="calcWorkHours" value="7.75" step="0.01"
+                                    class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-base font-mono focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                                    oninput="calculateTotalWork()">
+                                <span class="absolute right-3 top-2.5 text-xs text-slate-400">時間</span>
+                            </div>
+                            <span class="text-[11px] text-slate-400 mt-0.5 block">※ 7時間45分 ➔ 7.75</span>
+                        </div>
+                        <div>
+                            <label class="text-xs font-semibold text-slate-600 mb-1 block">平日 出勤日数</label>
+                            <div class="relative">
+                                <input type="number" id="calcWorkDays" value="22" min="0" step="1"
+                                    class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-base font-mono focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                                    oninput="calculateTotalWork()">
+                                <span class="absolute right-3 top-2.5 text-xs text-slate-400">日</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Paid Leave (Paid Holiday) Input Block -->
+                    <div class="bg-emerald-50/60 p-3.5 rounded-xl border border-emerald-200/80">
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-xs font-bold text-emerald-900 flex items-center gap-1">
+                                <i class="fa-solid fa-umbrella-beach text-emerald-600"></i> 有給休暇の加算
+                            </label>
+                            <span class="text-[11px] text-emerald-700">（なければ 0）</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3 items-center mt-2">
+                            <div>
+                                <span class="text-xs text-slate-500 block mb-1">有給取得日数</span>
+                                <div class="relative">
+                                    <input type="number" id="calcPaidDays" value="0" min="0" step="0.5"
+                                        class="w-full px-3 py-1.5 bg-white border border-emerald-300 rounded-lg text-base font-mono focus:ring-2 focus:ring-emerald-500 outline-none"
+                                        oninput="calculateTotalWork()">
+                                    <span class="absolute right-3 top-2 text-xs text-slate-400">日</span>
+                                </div>
+                            </div>
+                            <div>
+                                <span class="text-xs text-slate-500 block mb-1">時間単位の有給 (時間)</span>
+                                <div class="relative">
+                                    <input type="number" id="calcPaidHours" value="0" min="0" step="0.25"
+                                        class="w-full px-3 py-1.5 bg-white border border-emerald-300 rounded-lg text-base font-mono focus:ring-2 focus:ring-emerald-500 outline-none"
+                                        oninput="calculateTotalWork()">
+                                    <span class="absolute right-3 top-2 text-xs text-slate-400">時間</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-amber-50/60 p-3.5 rounded-xl border border-amber-200/80">
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-xs font-bold text-amber-900 flex items-center gap-1">
+                                <i class="fa-solid fa-clock text-amber-600"></i> 遅刻・早退時間控除
+                            </label>
+                            <span class="text-[11px] text-amber-700">（なければ 0）</span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="text-xs text-slate-600 block">遅刻・早退時間</label>
+                                <!-- Mode Selector Button -->
+                                <div class="inline-flex rounded-md shadow-sm text-[11px]" role="group">
+                                    <button type="button" id="btnLateModeTime" onclick="setLateMode('time')"
+                                        class="px-2 py-0.5 font-medium rounded-l-md border border-amber-300 bg-amber-600 text-white transition">
+                                        時:分 (例 1:05)
+                                    </button>
+                                    <button type="button" id="btnLateModeDec" onclick="setLateMode('dec')"
+                                        class="px-2 py-0.5 font-medium rounded-r-md border border-l-0 border-amber-300 bg-white text-slate-600 hover:bg-slate-50 transition">
+                                        10進数 (例 1.08)
+                                    </button>
+                                </div>
+                            </div>
+                            <input type="text" id="subLateInput" value="1:05" placeholder="例: 1:05 または 1.05" 
+                                class="w-full px-3 py-1.5 bg-white border border-amber-300 rounded-lg text-sm font-mono focus:ring-2 focus:ring-amber-500 outline-none"
+                                oninput="calculateTotalWork()">
+                        </div>
+
+                        <!-- Deduction Summary -->
+                        <div class="bg-amber-100/60 p-2.5 rounded-lg border border-amber-200/80 flex flex-col sm:flex-row justify-between items-center gap-2">
+                            <div class="text-xs text-amber-900">
+                                <span class="text-slate-500">控除時間:</span> 
+                                <strong id="calcDeductTimeFormat" class="text-amber-900 font-semibold text-sm">1時間5分</strong>
+                                <span class="text-slate-400 text-[11px] ml-1">(10進数: <strong id="calcDeductNumDisplay" class="font-mono">1.08</strong>)</span>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-xs text-slate-500 mr-1">差引後の労働数値:</span>
+                                <span id="calcSubtotalNum" class="text-xl font-bold font-mono text-amber-900">169.42</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-blue-50/60 p-3.5 rounded-xl border border-blue-200/80">
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-xs font-bold text-blue-900 flex items-center gap-1">
+                                <i class="fa-solid fa-circle-plus text-blue-600"></i> 休出時 休憩不取得分の加算
+                            </label>
+                            <span class="text-[11px] text-blue-700">（出勤簿加算用）</span>
+                        </div>
+                        <p class="text-[11px] text-slate-500 mb-2">休出時に休憩を取らず通しで業務を行った場合、出勤簿記載時間に足す時間を入力</p>
+                        
+                        <div class="grid grid-cols-1 gap-3 items-center">
+                            <div>
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="text-xs text-slate-600 block">加算時間</span>
+                                    <!-- Mode Selector Button for Holiday Addition -->
+                                    <div class="inline-flex rounded-md shadow-sm text-[11px]" role="group">
+                                        <button type="button" id="btnAddModeTime" onclick="setAddHolidayMode('time')"
+                                            class="px-2 py-0.5 font-medium rounded-l-md border border-blue-300 bg-blue-600 text-white transition">
+                                            時:分 (例 0:45)
+                                        </button>
+                                        <button type="button" id="btnAddModeDec" onclick="setAddHolidayMode('dec')"
+                                            class="px-2 py-0.5 font-medium rounded-r-md border border-l-0 border-blue-300 bg-white text-slate-600 hover:bg-slate-50 transition">
+                                            10進数 (例 0.75)
+                                        </button>
+                                    </div>
+                                </div>
+                                <input type="text" id="addHolidayNoBreakInput" value="0:00" placeholder="0:45 または 0.75" 
+                                    class="w-full px-3 py-1.5 bg-white border border-blue-300 rounded-lg text-sm font-mono focus:ring-2 focus:ring-blue-500 outline-none"
+                                    oninput="calculateTotalWork()">
+                            </div>
+                            <div class="bg-blue-100/60 p-2.5 rounded-lg border border-blue-200/80 text-xs text-blue-900 flex justify-between items-center">
+                                <div>
+                                    <span class="text-slate-500">加算時間表記:</span>
+                                    <strong id="calcAddHolidayTimeFormat" class="font-semibold text-sm ml-1">0時間0分</strong>
+                                </div>
+                                <div>
+                                    <span class="text-slate-500">10進数換算:</span>
+                                    <strong id="calcAddHolidayNumDisplay" class="font-mono ml-1 text-sm">0.00</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Final Result Summary -->
+                    <div class="bg-indigo-900 text-white p-4 rounded-xl shadow-inner space-y-3">
+                        <div class="flex justify-between items-baseline border-b border-indigo-700/60 pb-2">
+                            <span class="text-xs text-indigo-200">加算後 合計労働数値 (休出・有給込)</span>
+                            <span id="calcBaseTotalNum" class="text-xl font-mono font-bold text-indigo-100">170.50</span>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-sm font-medium text-indigo-200">出勤簿に書く時間 (時.分)</span>
+                                <span class="text-xs bg-indigo-800 text-indigo-300 px-2 py-0.5 rounded">最終算出</span>
+                            </div>
+                            <div class="flex justify-between items-baseline">
+                                <div id="calcFinalTimeString" class="text-3xl font-extrabold font-mono text-amber-300">169.25</div>
+                                <span id="calcFinalTimeFormat" class="text-xs font-mono text-indigo-200">(169時間25分)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="mt-4 flex gap-2">
+                <button onclick="copyToClipboard('calcFinalTimeString')" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold py-2 px-3 rounded-lg border border-slate-300 transition flex items-center justify-center gap-1.5">
+                    <i class="fa-regular fa-copy"></i> 出勤簿時間をコピー
+                </button>
+                <button onclick="resetCalculator()" class="bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-600 text-xs font-semibold py-2 px-3 rounded-lg border border-slate-300 transition">
+                    <i class="fa-solid fa-rotate-left"></i> リセット
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <section class="max-w-6xl mx-auto px-4 mt-6">
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-md font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-list-check text-indigo-600"></i> 計算履歴 / 記録メモ
+                </h3>
+                <button onclick="addCurrentToHistory()" class="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold px-3 py-1.5 rounded-lg border border-indigo-200 transition">
+                    <i class="fa-solid fa-plus mr-1"></i> 現在の計算結果を保存
+                </button>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead>
+                        <tr class="bg-slate-50 text-slate-500 border-b border-slate-200">
+                            <th class="p-2.5 font-semibold">日時</th>
+                            <th class="p-2.5 font-semibold">出勤日数/有給</th>
+                            <th class="p-2.5 font-semibold">合計数値(有給込)</th>
+                            <th class="p-2.5 font-semibold">遅刻・早退 / 休出加算</th>
+                            <th class="p-2.5 font-semibold">差引数値</th>
+                            <th class="p-2.5 font-semibold font-bold text-indigo-700">出勤簿記載時間</th>
+                            <th class="p-2.5 font-semibold text-right">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTableBody" class="divide-y divide-slate-100">
+                        <!-- History items dynamically added here -->
+                    </tbody>
+                </table>
+                <div id="noHistoryMsg" class="text-center text-slate-400 py-6 text-xs">
+                    保存された履歴はありません。「現在の計算結果を保存」ボタンを押すとここに蓄積されます。
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-4 right-4 bg-slate-800 text-white px-4 py-2.5 rounded-lg shadow-lg text-xs font-medium transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none flex items-center gap-2 z-50">
+        <i class="fa-solid fa-circle-check text-emerald-400"></i>
+        <span id="toastMsg">コピーしました</span>
+    </div>
+
+    <script>
+        let historyList = [];
+        let lateInputMode = 'time'; // 'time' or 'dec'
+        let addHolidayInputMode = 'time'; // 'time' or 'dec'
+
+        function setLateMode(mode) {
+            lateInputMode = mode;
+            const btnTime = document.getElementById('btnLateModeTime');
+            const btnDec = document.getElementById('btnLateModeDec');
+            const input = document.getElementById('subLateInput');
+
+            if (mode === 'time') {
+                btnTime.className = "px-2 py-0.5 font-medium rounded-l-md border border-amber-300 bg-amber-600 text-white transition";
+                btnDec.className = "px-2 py-0.5 font-medium rounded-r-md border border-l-0 border-amber-300 bg-white text-slate-600 hover:bg-slate-50 transition";
+                input.placeholder = "例: 1:05 (1時間5分)";
+            } else {
+                btnDec.className = "px-2 py-0.5 font-medium rounded-r-md border border-amber-300 bg-amber-600 text-white transition";
+                btnTime.className = "px-2 py-0.5 font-medium rounded-l-md border border-r-0 border-amber-300 bg-white text-slate-600 hover:bg-slate-50 transition";
+                input.placeholder = "例: 1.08 (10進数時間)";
+            }
+            calculateTotalWork();
+        }
+
+        function setAddHolidayMode(mode) {
+            addHolidayInputMode = mode;
+            const btnTime = document.getElementById('btnAddModeTime');
+            const btnDec = document.getElementById('btnAddModeDec');
+            const input = document.getElementById('addHolidayNoBreakInput');
+
+            if (mode === 'time') {
+                btnTime.className = "px-2 py-0.5 font-medium rounded-l-md border border-blue-300 bg-blue-600 text-white transition";
+                btnDec.className = "px-2 py-0.5 font-medium rounded-r-md border border-l-0 border-blue-300 bg-white text-slate-600 hover:bg-slate-50 transition";
+                input.placeholder = "例: 0:45 (45分)";
+            } else {
+                btnDec.className = "px-2 py-0.5 font-medium rounded-r-md border border-blue-300 bg-blue-600 text-white transition";
+                btnTime.className = "px-2 py-0.5 font-medium rounded-l-md border border-r-0 border-blue-300 bg-white text-slate-600 hover:bg-slate-50 transition";
+                input.placeholder = "例: 0.75 (10進数時間)";
+            }
+            calculateTotalWork();
+        }
+
+        function parseDeductTimeInput(val, mode = 'time') {
+            if (!val) return { decimalHours: 0, hours: 0, minutes: 0 };
+            val = val.toString().trim();
+
+            if (mode === 'dec') {
+                const num = parseFloat(val);
+                if (isNaN(num)) return { decimalHours: 0, hours: 0, minutes: 0 };
+                const h = Math.floor(num);
+                const m = Math.round((num - h) * 60);
+                return {
+                    decimalHours: num,
+                    hours: h,
+                    minutes: m
+                };
+            }
+
+            // Time Mode ('time')
+            if (val.includes(':')) {
+                const parts = val.split(':');
+                const h = parseInt(parts[0], 10) || 0;
+                const m = parseInt(parts[1], 10) || 0;
+                return {
+                    decimalHours: h + (m / 60),
+                    hours: h,
+                    minutes: m
+                };
+            }
+
+            const num = parseFloat(val);
+            if (isNaN(num)) return { decimalHours: 0, hours: 0, minutes: 0 };
+
+            if (val.includes('.')) {
+                const parts = val.split('.');
+                const h = parseInt(parts[0], 10) || 0;
+                let decPart = parts[1];
+                if (decPart.length === 1) decPart += '0';
+                const m = parseInt(decPart.substring(0, 2), 10) || 0;
+
+                if (m < 60) {
+                    return {
+                        decimalHours: h + (m / 60),
+                        hours: h,
+                        minutes: m
+                    };
+                }
+            }
+
+            const h = Math.floor(num);
+            const m = Math.round((num - h) * 60);
+            return {
+                decimalHours: num,
+                hours: h,
+                minutes: m
+            };
+        }
+
+        function convertTimeToNum() {
+            const inputVal = document.getElementById('timeToNumInput').value.trim();
+            if (!inputVal) {
+                document.getElementById('timeToNumResult').innerText = "0.00";
+                return;
+            }
+
+            const parsed = parseDeductTimeInput(inputVal, 'time');
+            document.getElementById('timeToNumResult').innerText = parsed.decimalHours.toFixed(2);
+        }
+
+        function convertNumToTime() {
+            const inputVal = parseFloat(document.getElementById('numToTimeInput').value);
+            if (isNaN(inputVal) || inputVal <= 0) {
+                document.getElementById('numToTimeResult').innerHTML = `0.00 <span class="text-xs font-normal text-slate-500">(0:00)</span>`;
+                return;
+            }
+
+            const hours = Math.floor(inputVal);
+            const minutes = Math.round((inputVal - hours) * 60);
+            const formattedMin = minutes.toString().padStart(2, '0');
+
+            document.getElementById('numToTimeResult').innerHTML = `${hours}.${formattedMin} <span class="text-xs font-normal text-slate-500">(${hours}:${formattedMin})</span>`;
+        }
+
+        function calculateTotalWork() {
+            const workHours = parseFloat(document.getElementById('calcWorkHours').value) || 0;
+            const workDays = parseFloat(document.getElementById('calcWorkDays').value) || 0;
+
+            const paidDaysEl = document.getElementById('calcPaidDays');
+            const paidHoursEl = document.getElementById('calcPaidHours');
+            const paidDays = paidDaysEl ? (parseFloat(paidDaysEl.value) || 0) : 0;
+            const paidHours = paidHoursEl ? (parseFloat(paidHoursEl.value) || 0) : 0;
+
+            // Parse Late/Early deduction with mode
+            const lateVal = document.getElementById('subLateInput') ? document.getElementById('subLateInput').value.trim() : '';
+            const parsedLate = parseDeductTimeInput(lateVal, lateInputMode);
+            const deductHours = parsedLate.decimalHours;
+            
+            const totalHoursInt = Math.floor(deductHours);
+            const totalMinInt = Math.round((deductHours - totalHoursInt) * 60);
+            const textFormatted = `${totalHoursInt}時間${totalMinInt}分`;
+
+            document.getElementById('calcDeductTimeFormat').innerText = textFormatted;
+            document.getElementById('calcDeductNumDisplay').innerText = deductHours.toFixed(2);
+
+            // Parse Holiday Work Non-stop Break Addition with mode
+            const addHolidayVal = document.getElementById('addHolidayNoBreakInput') ? document.getElementById('addHolidayNoBreakInput').value.trim() : '';
+            const parsedAddHoliday = parseDeductTimeInput(addHolidayVal, addHolidayInputMode);
+            const addHolidayHours = parsedAddHoliday.decimalHours;
+
+            const addHolidayHoursInt = Math.floor(addHolidayHours);
+            const addHolidayMinInt = Math.round((addHolidayHours - addHolidayHoursInt) * 60);
+            const addHolidayTextFormatted = `${addHolidayHoursInt}時間${addHolidayMinInt}分`;
+
+            if (document.getElementById('calcAddHolidayTimeFormat')) {
+                document.getElementById('calcAddHolidayTimeFormat').innerText = addHolidayTextFormatted;
+                document.getElementById('calcAddHolidayNumDisplay').innerText = addHolidayHours.toFixed(2);
+            }
+
+            // 1. Total Base Work (数値) + Paid Leave
+            const workBase = workHours * workDays;
+            const paidBase = (workHours * paidDays) + paidHours;
+
+            const baseTotal = workBase + paidBase;
+            document.getElementById('calcBaseTotalNum').innerText = baseTotal.toFixed(2);
+
+            // 2. Subtotal after Deduction and Holiday Addition (数値)
+            const subtotal = Math.max(0, baseTotal - deductHours + addHolidayHours);
+            document.getElementById('calcSubtotalNum').innerText = subtotal.toFixed(2);
+
+            // 3. Convert Subtotal Decimal to Time (hh.mm)
+            const hours = Math.floor(subtotal);
+            const minutes = Math.round((subtotal - hours) * 60);
+            const formattedMinutes = minutes.toString().padStart(2, '0');
+
+            const resultTimeString = `${hours}.${formattedMinutes}`;
+            const resultTimeColon = `${hours}時間${formattedMinutes}分`;
+
+            document.getElementById('calcFinalTimeString').innerText = resultTimeString;
+            document.getElementById('calcFinalTimeFormat').innerText = `(${resultTimeColon})`;
+        }
+
+        function resetCalculator() {
+            document.getElementById('calcWorkHours').value = "7.75";
+            document.getElementById('calcWorkDays').value = "22";
+            if (document.getElementById('calcPaidDays')) document.getElementById('calcPaidDays').value = "0";
+            if (document.getElementById('calcPaidHours')) document.getElementById('calcPaidHours').value = "0";
+            if (document.getElementById('subLateInput')) document.getElementById('subLateInput').value = "1:05";
+            if (document.getElementById('addHolidayNoBreakInput')) document.getElementById('addHolidayNoBreakInput').value = "0:00";
+            setLateMode('time');
+            setAddHolidayMode('time');
+            calculateTotalWork();
+            showToast("初期値にリセットしました");
+        }
+
+        function addCurrentToHistory() {
+            const workHours = parseFloat(document.getElementById('calcWorkHours').value) || 0;
+            const workDays = parseFloat(document.getElementById('calcWorkDays').value) || 0;
+
+            const paidDaysEl = document.getElementById('calcPaidDays');
+            const paidHoursEl = document.getElementById('calcPaidHours');
+            const paidDays = paidDaysEl ? (parseFloat(paidDaysEl.value) || 0) : 0;
+            const paidHours = paidHoursEl ? (parseFloat(paidHoursEl.value) || 0) : 0;
+            
+            const lateVal = document.getElementById('subLateInput') ? document.getElementById('subLateInput').value.trim() : '';
+            const parsedLate = parseDeductTimeInput(lateVal, lateInputMode);
+            const deductHours = parsedLate.decimalHours;
+
+            const addHolidayVal = document.getElementById('addHolidayNoBreakInput') ? document.getElementById('addHolidayNoBreakInput').value.trim() : '';
+            const parsedAddHoliday = parseDeductTimeInput(addHolidayVal, addHolidayInputMode);
+            const addHolidayHours = parsedAddHoliday.decimalHours;
+
+            const workBase = workHours * workDays;
+            const paidBase = (workHours * paidDays) + paidHours;
+            const baseTotal = (workBase + paidBase).toFixed(2);
+
+            const subtotal = document.getElementById('calcSubtotalNum').innerText;
+            const finalTime = document.getElementById('calcFinalTimeString').innerText;
+
+            const now = new Date();
+            const timeStr = `${now.getMonth() + 1}/${now.getDate()} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+
+            let daysDetail = `${workDays}日`;
+            if (paidDays > 0) daysDetail += ` (+有給${paidDays}日)`;
+            if (paidHours > 0) daysDetail += ` (+有給${paidHours}h)`;
+
+            const totalHoursInt = Math.floor(deductHours);
+            const totalMinInt = Math.round((deductHours - totalHoursInt) * 60);
+
+            const addHolidayHoursInt = Math.floor(addHolidayHours);
+            const addHolidayMinInt = Math.round((addHolidayHours - addHolidayHoursInt) * 60);
+
+            let deductInfo = `-${totalHoursInt}h${totalMinInt}m (${deductHours.toFixed(2)})`;
+            if (addHolidayHours > 0) {
+                deductInfo += ` / +休出${addHolidayHoursInt}h${addHolidayMinInt}m`;
+            }
+
+            const item = {
+                id: Date.now(),
+                time: timeStr,
+                formula: daysDetail,
+                baseTotal,
+                deductFormatted: deductInfo,
+                subtotal,
+                finalTime
+            };
+
+            historyList.unshift(item);
+            renderHistory();
+            showToast("履歴に保存しました");
+        }
+
+        function renderHistory() {
+            const tbody = document.getElementById('historyTableBody');
+            const noMsg = document.getElementById('noHistoryMsg');
+
+            if (historyList.length === 0) {
+                tbody.innerHTML = '';
+                noMsg.classList.remove('hidden');
+                return;
+            }
+
+            noMsg.classList.add('hidden');
+            tbody.innerHTML = historyList.map(item => `
+                <tr class="hover:bg-slate-50">
+                    <td class="p-2.5 text-slate-400">${item.time}</td>
+                    <td class="p-2.5 font-mono">${item.formula}</td>
+                    <td class="p-2.5 font-mono">${item.baseTotal}</td>
+                    <td class="p-2.5 font-mono text-amber-700">${item.deductFormatted}</td>
+                    <td class="p-2.5 font-mono font-semibold">${item.subtotal}</td>
+                    <td class="p-2.5 font-mono font-bold text-indigo-600 text-sm">${item.finalTime}</td>
+                    <td class="p-2.5 text-right">
+                        <button onclick="removeHistory(${item.id})" class="text-slate-400 hover:text-rose-500 p-1">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function removeHistory(id) {
+            historyList = historyList.filter(item => item.id !== id);
+            renderHistory();
+        }
+
+        function copyToClipboard(elementId) {
+            const text = document.getElementById(elementId).innerText;
+            
+            const tempInput = document.createElement('input');
+            tempInput.value = text;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+
+            showToast(`出勤簿時間 「${text}」 をコピーしました`);
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toastMsg');
+            toastMsg.innerText = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 2500);
+        }
+
+        window.onload = function() {
+            document.getElementById('timeToNumInput').value = "7.45";
+            convertTimeToNum();
+
+            document.getElementById('numToTimeInput').value = "162.45";
+            convertNumToTime();
+
+            calculateTotalWork();
+        };
+    </script>
+</body>
+</html>
