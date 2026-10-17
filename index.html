@@ -196,7 +196,7 @@
                                     </button>
                                 </div>
                             </div>
-                            <input type="text" id="subLateInput" value="1:05" placeholder="例: 1:05 または 1.05" 
+                            <input type="text" id="subLateInput" value="0:00" placeholder="例: 1:05 または 1.05" 
                                 class="w-full px-3 py-1.5 bg-white border border-amber-300 rounded-lg text-sm font-mono focus:ring-2 focus:ring-amber-500 outline-none"
                                 oninput="calculateTotalWork()">
                         </div>
@@ -205,12 +205,12 @@
                         <div class="bg-amber-100/60 p-2.5 rounded-lg border border-amber-200/80 flex flex-col sm:flex-row justify-between items-center gap-2">
                             <div class="text-xs text-amber-900">
                                 <span class="text-slate-500">控除時間:</span> 
-                                <strong id="calcDeductTimeFormat" class="text-amber-900 font-semibold text-sm">1時間5分</strong>
-                                <span class="text-slate-400 text-[11px] ml-1">(10進数: <strong id="calcDeductNumDisplay" class="font-mono">1.08</strong>)</span>
+                                <strong id="calcDeductTimeFormat" class="text-amber-900 font-semibold text-sm">0時間0分</strong>
+                                <span class="text-slate-400 text-[11px] ml-1">(10進数: <strong id="calcDeductNumDisplay" class="font-mono">0.00</strong>)</span>
                             </div>
                             <div class="text-right">
                                 <span class="text-xs text-slate-500 mr-1">差引後の労働数値:</span>
-                                <span id="calcSubtotalNum" class="text-xl font-bold font-mono text-amber-900">169.42</span>
+                                <span id="calcSubtotalNum" class="text-xl font-bold font-mono text-amber-900">170.50</span>
                             </div>
                         </div>
                     </div>
@@ -517,7 +517,7 @@
             document.getElementById('calcWorkDays').value = "22";
             if (document.getElementById('calcPaidDays')) document.getElementById('calcPaidDays').value = "0";
             if (document.getElementById('calcPaidHours')) document.getElementById('calcPaidHours').value = "0";
-            if (document.getElementById('subLateInput')) document.getElementById('subLateInput').value = "1:05";
+            if (document.getElementById('subLateInput')) document.getElementById('subLateInput').value = "0:00";
             if (document.getElementById('addHolidayNoBreakInput')) document.getElementById('addHolidayNoBreakInput').value = "0:00";
             setLateMode('time');
             setAddHolidayMode('time');
